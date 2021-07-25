@@ -30,6 +30,7 @@ This is based on https://github.com/awsdocs/aws-lambda-developer-guide/tree/main
 S3 -> Lambda -> DynamoDB
 
 A lambda is triggered for any files put in the specified S3 bucket, the lambda reads the file, compute the sum of values for each day and save the result in DynamoDB.
+I have decided to only store the sum per day and meter instead of all the values as our use case only need that, if in the future we need all the data I assume we will keep them in S3 so that it will be possible to reprocess it.
 
 Assumption: files can be processed within 15 min, if that's not the case then an alternative architecture must be used (see alternatives section).
 
@@ -39,10 +40,11 @@ Provided the above assumption is true, a lambda is a good fit for this applicati
 
 ### Assumptions
 
-CSV structure is stable. 
-Date in csv always follow the YYYY-MM-DD pattern and the timezone is consistent that is other csv are in the same TZ (as a note, it would be interesting to see how consecutive files look like when DST applies).
-Consumption values can be floating point numbers. 
-Meter and date constitutes a unique identifier for a row.
+- We receive the csv files in S3.
+- CSV structure is stable. 
+- Date in csv always follow the YYYY-MM-DD pattern and the timezone is consistent that is other csv are in the same TZ (as a note, it would be interesting to see how consecutive files look like when DST applies).
+- Consumption values can be floating point numbers. 
+- Meter and date constitutes a unique identifier for a row.
 
 ### Lambda
 
