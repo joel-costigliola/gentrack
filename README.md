@@ -16,21 +16,27 @@ The solution needs to be provided as an open GitHub/BitBucket/GitLab repo contai
 
 ## Architecture
 
-TODO: architecture diagram
+The solution is composed of two applications:
+- Consumption Ingestion application (in ./store-consumption)
+- Consumption reporting API (in ./consumption-api)
 
 
 ## Consumption Ingestion application
 
-based on https://github.com/awsdocs/aws-lambda-developer-guide/tree/main/sample-apps/s3-java modified to write to DynamoDB
+This is based on https://github.com/awsdocs/aws-lambda-developer-guide/tree/main/sample-apps/s3-java modified to write to DynamoDB.
 
 ### Architecture
 
 S3 -> Lambda -> DynamoDB
 
+A lambda is triggered for any files put in the specified S3 bucket, the lambda reads the file, compute the sum of values for each day and save the result in DynamoDB.
+
 Assumption: files can be processed within 15 min, if that's not the case then an alternative architecture must be used (see alternatives section).
 
-I loosely followed the Hexagonal architecture pattern, a bit overkill for this simple example but that's a pattern I find quite clean to separate the domain from the tech plumbing.
-https://blog.octo.com/en/hexagonal-architecture-three-principles-and-an-implementation-example/
+Provided the above assumption is true, a lambda is a good fit for this application because:
+- the processing is stateless (each file can be processed independently of the other ones)
+- no cost waste of AWS resources, we pay only for the invoked lambdas
+
 
 #### Lambda
 
@@ -42,6 +48,8 @@ CsvConsumptionIngestor is not tied to the lambda and could be reused in a differ
 
 ConsumptionReader could check the data is in within reasonable range, for example it should not read a negative value or a value so big it can't happen, it could raise an exception to discard the file processing (ideally an alert would be raised too)
 
+I loosely followed the Hexagonal architecture pattern, a bit overkill for this simple example but that's a pattern I find quite clean to separate the domain from the tech plumbing.
+https://blog.octo.com/en/hexagonal-architecture-three-principles-and-an-implementation-example/
 
 #### DynamoDB
 
