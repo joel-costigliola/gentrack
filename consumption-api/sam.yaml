@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS Serverless Jersey API - com.gentrack.meter.consumption.api::consumption-api
+Resources:
+  ConsumptionApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.gentrack.meter.consumption.api.StreamLambdaHandler::handleRequest
+      Runtime: java8
+      CodeUri: target/consumption-api-1.0-SNAPSHOT.jar
+      MemorySize: 512
+      Policies: AWSLambdaBasicExecutionRole
+      Timeout: 15
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: get
+
+Outputs:
+  ConsumptionApiApi:
+    Description: URL for application
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/consumption'
+    Export:
+      Name: ConsumptionApiApi

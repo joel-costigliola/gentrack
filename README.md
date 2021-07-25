@@ -18,19 +18,19 @@ The solution needs to be provided as an open GitHub/BitBucket/GitLab repo contai
 
 TODO: architecture diagram
 
-Hexagonal architecture, a bit overkill for this simple example but that's a pattern that I find quite clean in term of separating the domain from the tech plumbing.
-https://blog.octo.com/en/hexagonal-architecture-three-principles-and-an-implementation-example/
 
 ## Consumption Ingestion application
 
 based on https://github.com/awsdocs/aws-lambda-developer-guide/tree/main/sample-apps/s3-java modified to write to DynamoDB
 
-### Design
+### Architecture
 
 S3 -> Lambda -> DynamoDB
 
-When reading the csv file, make sure it is read line by line to avoid loading the whole file in memory, this is especially important as lambdas have memory constraints.
-I'm making the assumption here that the file can be processed within 15 min, if that's not the case then an alternative architecture must be used (see alternatives section).
+Assumption: files can be processed within 15 min, if that's not the case then an alternative architecture must be used (see alternatives section).
+
+I loosely followed the Hexagonal architecture pattern, a bit overkill for this simple example but that's a pattern I find quite clean to separate the domain from the tech plumbing.
+https://blog.octo.com/en/hexagonal-architecture-three-principles-and-an-implementation-example/
 
 #### Lambda
 
@@ -62,9 +62,9 @@ Meter and date constitutes a unique identifier for a row.
 
 Since the data is not sensitive (no Private Personal Information, credit card or health data), it has been decided not to encrypt the data in S3.
 
-## Alternatives
+### Alternative solutions
 
-### Server application running on EC2
+#### Server application running on EC2
 
 The application repeats these steps in an infinite loop
 - reads the s3 bucket 
@@ -74,11 +74,33 @@ The application repeats these steps in an infinite loop
 This works fine with a single instance of the application but is tricky when multiple instances are running as they would compete for the files.
 This can be solved by having a store where the application sets a logical lock on the file they want to process.
 
-### Timestream
+#### Replacing DynamoDB with RDS
 
-Seems a good fit for time series https://docs.aws.amazon.com/timestream/index.html 
+Pros:
+
+The main advantage would to get on the API side to leverage "group by" clause to compute the average.
+
+```sql
+SELECT date, AVG(value) AS average_consumption
+FROM consumption 
+GROUP BY date
+WHERE date = '2019-01-01';
+```
+
+Cons:
+
+Not sure that RDS can scale well in term of writing.
+
+#### EMR Spark application
+
+Spark can read directly csv files stored in S3 without size limitations.
+To write the consumption data to DynamoDB, use the EMR DynamoDB connector https://github.com/awslabs/emr-dynamodb-connector
+
+#### Timestream
+
+Seems a good fit for time series https://docs.aws.amazon.com/timestream/index.html but I did not have the time to look into it in details.
  
-### CSV to dynamo 
+#### CSV to dynamo 
 
 Fast but no control over the business logic of the meter ingestion (what if we want to exclude some files if they have obvious bad values?)
 
@@ -87,6 +109,13 @@ https://github.com/aws-samples/csv-to-dynamodb
 
 ## Consumption reporting API
 
+API Gateway -> Lambda -> DynamoDB
+
+This is based on https://aws.amazon.com/blogs/opensource/java-apis-aws-lambda/ 
+
+### API Schema
+
+To get the average for a given date, simply perfrom a GET on URL: `<server>/consumption/average/{date}`
 
 ## To be done with more time
 
@@ -103,7 +132,7 @@ Setup Deployment pipelines to deploy the applications in different environment, 
 
 ### End to end / smoke tests
 
-I did not do it because I don't have an AWS account.
+I did not have the time and without an AWS account it does not make much sense.
 TODO: explain the approach 
 
 ### Documentation
