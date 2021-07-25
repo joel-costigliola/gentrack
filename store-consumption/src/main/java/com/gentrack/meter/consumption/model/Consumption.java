@@ -3,6 +3,7 @@ package com.gentrack.meter.consumption.model;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
@@ -29,6 +30,7 @@ public class Consumption {
     return meter;
   }
 
+  @DynamoDBAttribute(attributeName = "value")
   public double getValue() {
     return value;
   }
