@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: An AWS Lambda application that calls the Lambda API.
+Description: An AWS Lambda application that writes to DynamoDB.
 Resources:
   bucket:
     Type: AWS::S3::Bucket
@@ -20,8 +20,7 @@ Resources:
         - AWSLambda_ReadOnlyAccess
         - AWSXrayWriteOnlyAccess
         - AWSLambdaVPCAccessExecutionRole
-        - AmazonS3FullAccess
-        # TODO add DynamoDB write access policy
+        - AmazonS3FullAccess # TODO set to read access only
       Tracing: Active
       Layers:
         - !Ref libs
@@ -31,6 +30,26 @@ Resources:
           Properties:
             Bucket: !Ref bucket
             Events: s3:ObjectCreated:*
+  Consumption:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: date
+          AttributeType: S
+        -
+          AttributeName: meter
+          AttributeType: S
+        -
+          AttributeName: value
+          AttributeType: N
+      KeySchema:
+        -
+          AttributeName: date
+          KeyType: HASH
+        -
+          AttributeName: meter
+          KeyType: RANGE
   libs:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -39,3 +58,9 @@ Resources:
       ContentUri: build/store-consumption-lib.zip
       CompatibleRuntimes:
         - java8
+
+# TODO not sure if that is supported by AWS::Serverless-2016-10-31
+Outputs:
+  Consumption:
+    Description: Table Created using this template.
+    Value: !Ref Consumption
