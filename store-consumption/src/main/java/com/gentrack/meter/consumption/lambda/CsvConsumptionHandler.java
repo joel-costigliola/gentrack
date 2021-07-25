@@ -8,7 +8,6 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -32,7 +31,7 @@ public class CsvConsumptionHandler implements RequestHandler<S3Event, String> {
 
   @Override
   public String handleRequest(S3Event s3event, Context context) {
-    
+
     S3EventNotificationRecord record = s3event.getRecords().get(0);
     String bucket = record.getS3().getBucket().getName();
     // Object key may have spaces or unicode non-ASCII characters.
@@ -44,7 +43,7 @@ public class CsvConsumptionHandler implements RequestHandler<S3Event, String> {
       csvConsumptionIngestor.ingestConsumptionData(consumptionData);
       return "Ok";
     } catch (Exception e) {
-      // use AWS Cloudwatch to get metrics of failed processed files. 
+      // use AWS Cloudwatch to get metrics of failed processed files.
       LOGGER.error(format("Failed to process%s/%s", bucket, csvKey));
       throw e;
     }
@@ -70,14 +69,9 @@ public class CsvConsumptionHandler implements RequestHandler<S3Event, String> {
     AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
     return s3Client.getObject(new GetObjectRequest(srcBucket, srcKey));
   }
-  
+
   private DynamoDBMapper initDynamoDBMapper() {
-    String awsRegion = System.getenv("AWS_REGION");
-    String dynamoDBEndpoint = System.getenv("DYNAMODB_ENDPOINT");
-    EndpointConfiguration endpointConfiguration = new EndpointConfiguration(dynamoDBEndpoint, awsRegion);
-    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-                                                       .withEndpointConfiguration(endpointConfiguration)
-                                                       .build();
+    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
     return new DynamoDBMapper(client);
   }
 }

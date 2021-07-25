@@ -40,6 +40,8 @@ Provided the above assumption is true, a lambda is a good fit for this applicati
 
 #### Lambda
 
+The lambda is configured through environement variables, an alternative option would be specifying an S3 object path (through an environement variable) where to read a config file if the configuration is complex.
+
 Read the csv as an input stream (not loading the whole file in memory) and delegates to CsvConsumptionIngestor the processing of the data.
 CsvConsumptionIngestor use ConsumptionReader to map the data to a stream of Consumption objects which is passed to ConsumptionWriter.
 ConsumptionWriter batches the stream and write each batch until stream is exhausted.
@@ -53,10 +55,12 @@ https://blog.octo.com/en/hexagonal-architecture-three-principles-and-an-implemen
 
 #### DynamoDB
 
-Schema is: Meter,Date,value
+Schema is: meter,date,value
 Ex:
 EE00011,2019-01-01,123
 EE00011,2019-01-02,456
+
+I haven't has the time to create the DymanoDB table in 
 
 
 ### Assumptions
