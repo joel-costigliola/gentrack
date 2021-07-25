@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that calls the Lambda API.
+Resources:
+  bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: build/distributions/store-consumption.zip
+      Handler: com.gentrack.meter.consumption.lambda.CsvConsumptionHandler
+      Runtime: java8
+      Description: Java function
+      MemorySize: 512
+      Timeout: 10
+      # Function's execution role
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambda_ReadOnlyAccess
+        - AWSXrayWriteOnlyAccess
+        - AWSLambdaVPCAccessExecutionRole
+        - AmazonS3FullAccess
+      Tracing: Active
+      Layers:
+        - !Ref libs
+      Events:
+        s3Notification:
+          Type: S3
+          Properties:
+            Bucket: !Ref bucket
+            Events: s3:ObjectCreated:*
+  libs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: store-consumption-lib
+      Description: Dependencies for the Java S3 sample app.
+      ContentUri: build/store-consumption-lib.zip
+      CompatibleRuntimes:
+        - java8
