@@ -24,6 +24,7 @@ Resources:
         - AWSXrayWriteOnlyAccess
         - AWSLambdaVPCAccessExecutionRole
         - AmazonS3FullAccess # TODO set to read access only
+        # Allow dynamodb BatchWriteItem and PutItem
       Tracing: Active
       Layers:
         - !Ref libs
